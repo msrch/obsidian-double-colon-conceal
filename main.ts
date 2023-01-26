@@ -51,9 +51,9 @@ export default class DoubleColonConcealPlugin extends Plugin {
               if (content.startsWith('::')) {
                 concealDoubleColon(node)
               }
-            } else {
+            } else if (content.includes('::')) {
               const parts = content.split('::')
-              if (allowedCharacters.test(parts[0])) {
+              if (parts[0] && allowedCharacters.test(parts[0])) {
                 concealDoubleColon(node)
               }
             }

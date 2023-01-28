@@ -1,7 +1,7 @@
 {
 	"id": "double-colon-conceal",
 	"name": "Double Colon Conceal",
-	"version": "1.1.0",
+	"version": "1.1.1",
 	"minAppVersion": "0.15.0",
 	"description": "Display double colon (Dataview) as a single colon in reading view (preview mode) for more natural experience.",
 	"author": "Michal Srch",

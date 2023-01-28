@@ -15,14 +15,14 @@ export default class DoubleColonConcealPlugin extends Plugin {
         if (!element.innerText.includes('::')) return
 
         let elementPosition = 0
-        let afterBold = false
+        let afterStyleTag = false
 
         for (const node of Array.from(element.childNodes)) {
           elementPosition++
 
           if (node instanceof HTMLBRElement) {
             elementPosition = 0
-            afterBold = false
+            afterStyleTag = false
             continue
           }
 
@@ -43,7 +43,7 @@ export default class DoubleColonConcealPlugin extends Plugin {
             node.childNodes[0] instanceof Text &&
             allowedCharacters.test(node.childNodes[0].textContent || '')
           ) {
-            afterBold = true
+            afterStyleTag = true
             elementPosition--
             continue
           }
@@ -55,7 +55,7 @@ export default class DoubleColonConcealPlugin extends Plugin {
               continue
             }
 
-            if (afterBold) {
+            if (afterStyleTag) {
               if (content.startsWith('::')) {
                 concealDoubleColon(node)
               }

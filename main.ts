@@ -9,15 +9,15 @@ const concealDoubleColon = (node: Text) => {
 export default class DoubleColonConcealPlugin extends Plugin {
   async onload() {
     this.registerMarkdownPostProcessor((el) => {
-      const paragraphs = el.querySelectorAll('p')
+      const elements = el.querySelectorAll('p, li')
 
-      paragraphs.forEach((paragraph) => {
-        if (!paragraph.innerText.includes('::')) return
+      elements.forEach((element: HTMLLIElement | HTMLParagraphElement) => {
+        if (!element.innerText.includes('::')) return
 
         let elementPosition = 0
         let afterBold = false
 
-        for (const node of Array.from(paragraph.childNodes)) {
+        for (const node of Array.from(element.childNodes)) {
           elementPosition++
 
           if (node instanceof HTMLBRElement) {
@@ -29,8 +29,16 @@ export default class DoubleColonConcealPlugin extends Plugin {
           if (elementPosition > 1) continue
 
           if (
+            node instanceof HTMLDivElement &&
+            node.className.startsWith('list-')
+          ) {
+            elementPosition--
+            continue
+          }
+
+          if (
             node instanceof HTMLElement &&
-            node.tagName === 'STRONG' &&
+            ['STRONG', 'EM', 'MARK', 'DEL'].includes(node.tagName) &&
             node.childNodes.length === 1 &&
             node.childNodes[0] instanceof Text &&
             allowedCharacters.test(node.childNodes[0].textContent || '')

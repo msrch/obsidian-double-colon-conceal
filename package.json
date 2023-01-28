@@ -1,6 +1,6 @@
 {
 	"name": "obsidian-double-colon-conceal",
-	"version": "1.0.0",
+	"version": "1.1.0",
 	"description": "A plugin for Obsidian - Display double colon (Dataview) as a single colon in reading view (preview mode) for more natural experience.",
 	"main": "main.js",
 	"scripts": {

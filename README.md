@@ -1,8 +1,9 @@
 # Double Colon Conceal ![GitHub release (latest SemVer)](https://img.shields.io/github/v/release/msrch/obsidian-double-colon-conceal) ![Obsidian Downloads](https://img.shields.io/badge/dynamic/json?logo=obsidian&color=%23483699&label=downloads&query=%24%5B%22double-colon-conceal%22%5D.downloads&url=https%3A%2F%2Fraw.githubusercontent.com%2Fobsidianmd%2Fobsidian-releases%2Fmaster%2Fcommunity-plugin-stats.json)
 
-[Obsidian](https://obsidian.md/) plugin to display double colon
-([Dataview](https://github.com/blacksmithgu/obsidian-dataview)) as a single
-colon in reading view (preview mode) for more natural experience.
+[Obsidian](https://obsidian.md/) plugin to display double colon (i.e.
+[Dataview](https://github.com/blacksmithgu/obsidian-dataview)
+[inline fields](https://blacksmithgu.github.io/obsidian-dataview/annotation/add-metadata/#inline-fields))
+as a single colon in reading view (preview mode) for more natural experience.
 
 ![Example](https://raw.githubusercontent.com/msrch/obsidian-double-colon-conceal/master/example.png)
 

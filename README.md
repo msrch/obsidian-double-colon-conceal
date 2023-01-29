@@ -9,7 +9,7 @@ as a single colon in reading view (preview mode) for more natural experience.
 
 ## Install
 
-It is recomened to restart Obsidian after installing and enabling this plugin to
+It is recommended to restart Obsidian after installing and enabling this plugin to
 prevent any render caching issues.
 
 ### Community Plugins in Obsidian

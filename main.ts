@@ -20,7 +20,7 @@ export default class DoubleColonConcealPlugin extends Plugin {
         for (const node of Array.from(element.childNodes)) {
           elementPosition++
 
-          if (node instanceof HTMLBRElement) {
+          if (node.instanceOf(HTMLBRElement)) {
             elementPosition = 0
             afterStyleTag = false
             continue
@@ -29,7 +29,7 @@ export default class DoubleColonConcealPlugin extends Plugin {
           if (elementPosition > 1) continue
 
           if (
-            node instanceof HTMLDivElement &&
+            node.instanceOf(HTMLDivElement) &&
             node.className.startsWith('list-')
           ) {
             elementPosition--
@@ -37,10 +37,10 @@ export default class DoubleColonConcealPlugin extends Plugin {
           }
 
           if (
-            node instanceof HTMLElement &&
+            node.instanceOf(HTMLElement) &&
             ['STRONG', 'EM', 'MARK', 'DEL'].includes(node.tagName) &&
             node.childNodes.length === 1 &&
-            node.childNodes[0] instanceof Text &&
+            node.childNodes[0].instanceOf(Text) &&
             allowedCharacters.test(node.childNodes[0].textContent || '')
           ) {
             afterStyleTag = true
@@ -48,7 +48,7 @@ export default class DoubleColonConcealPlugin extends Plugin {
             continue
           }
 
-          if (node instanceof Text) {
+          if (node.instanceOf(Text)) {
             const content = (node.textContent || '').trim()
             if (!content) {
               elementPosition--

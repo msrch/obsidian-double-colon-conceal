@@ -9,18 +9,14 @@ as a single colon in reading view (preview mode) for more natural experience.
 
 ## Install
 
-It is recommended to restart Obsidian after installing and enabling this plugin to
-prevent any render caching issues.
+It is recommended to restart Obsidian after installing and enabling this plugin
+to prevent any render caching issues.
 
 ### Community Plugins in Obsidian
 
-Not yet available -
-[review](https://github.com/obsidianmd/obsidian-releases/pull/1582/) pending.
-
-In the mean time you can try this plugin using
-[BRAT - Beta Reviewers Auto-update Tester](https://obsidian.md/plugins?id=obsidian42-brat) -
-please follow
-[the instructions provided by BRAT repo](https://github.com/TfTHacker/obsidian42-brat#adding-a-beta-plugin).
+Plugin is available for download now -
+[search](https://obsidian.md/plugins?search=Double+Colon+Conceal) for "Double
+Colon Conceal".
 
 ### Manual installation
 

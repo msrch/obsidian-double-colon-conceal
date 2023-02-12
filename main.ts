@@ -1,6 +1,8 @@
 import { Plugin } from 'obsidian'
 
-const allowedCharacters = /^[0-9\p{Letter} _-]+$/u
+const isValidFieldName = (text: string) => {
+  return !text.match(/[:[\]()]+/)
+}
 
 const concealDoubleColon = (node: Text) => {
   node.textContent = (node.textContent || '').replace(/::/, ':')
@@ -9,7 +11,7 @@ const concealDoubleColon = (node: Text) => {
 export default class DoubleColonConcealPlugin extends Plugin {
   async onload() {
     this.registerMarkdownPostProcessor((el) => {
-      const elements = el.querySelectorAll('p, li')
+      const elements = el.querySelectorAll('p, li, h1, h2, h3, h4, h5, h6')
 
       elements.forEach((element: HTMLLIElement | HTMLParagraphElement) => {
         if (!element.innerText.includes('::')) return
@@ -30,7 +32,8 @@ export default class DoubleColonConcealPlugin extends Plugin {
 
           if (
             node.instanceOf(HTMLDivElement) &&
-            node.className.startsWith('list-')
+            (node.className.startsWith('list-') ||
+              node.className.includes('collapse-indicator'))
           ) {
             elementPosition--
             continue
@@ -40,12 +43,26 @@ export default class DoubleColonConcealPlugin extends Plugin {
             node.instanceOf(HTMLElement) &&
             ['STRONG', 'EM', 'MARK', 'DEL'].includes(node.tagName) &&
             node.childNodes.length === 1 &&
-            node.childNodes[0].instanceOf(Text) &&
-            allowedCharacters.test(node.childNodes[0].textContent || '')
+            node.childNodes[0].instanceOf(Text)
           ) {
-            afterStyleTag = true
-            elementPosition--
-            continue
+            const content = (node.childNodes[0].textContent || '').trim()
+            if (!content) {
+              elementPosition--
+              continue
+            }
+
+            if (content.includes('::')) {
+              const parts = content.split('::')
+              if (parts[0] && isValidFieldName(parts[0])) {
+                concealDoubleColon(node.childNodes[0])
+              }
+            }
+
+            if (isValidFieldName(content)) {
+              afterStyleTag = true
+              elementPosition--
+              continue
+            }
           }
 
           if (node.instanceOf(Text)) {
@@ -61,7 +78,7 @@ export default class DoubleColonConcealPlugin extends Plugin {
               }
             } else if (content.includes('::')) {
               const parts = content.split('::')
-              if (parts[0] && allowedCharacters.test(parts[0])) {
+              if (parts[0] && isValidFieldName(parts[0])) {
                 concealDoubleColon(node)
               }
             }

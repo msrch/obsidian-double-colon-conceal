@@ -3,7 +3,7 @@
 	"name": "Double Colon Conceal",
 	"version": "1.2.0",
 	"minAppVersion": "0.15.0",
-	"description": "Display double colon (i.e. Dataview inline fields) as a single colon in reading view (preview mode) for more natural experience.",
+	"description": "Display double colon (i.e. Dataview inline fields) as a single colon for more natural reading experience.",
 	"author": "Michal Srch",
 	"authorUrl": "https://www.msrch.dev",
 	"isDesktopOnly": false

@@ -31,7 +31,25 @@ const DEFAULT_SETTINGS: DoubleColonConcealSettings = {
 // Utils
 
 const isValidFieldName = (text: string) => {
-  return !text.match(/[:[\]()]+/)
+  let squareBrackets = 0
+  let roundBrackets = 0
+  for (let i = 0; i < text.length; i++) {
+    switch (text[i]) {
+      case '[':
+        squareBrackets += 1
+        break
+      case ']':
+        squareBrackets = Math.max(0, squareBrackets - 1)
+        break
+      case '(':
+        roundBrackets += 1
+        break
+      case ')':
+        roundBrackets = Math.max(0, roundBrackets - 1)
+        break
+    }
+  }
+  return squareBrackets === 0 && roundBrackets === 0
 }
 
 const includesField = (text: string) => {

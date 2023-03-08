@@ -1,6 +1,6 @@
 {
   "name": "obsidian-double-colon-conceal",
-  "version": "1.2.1",
+  "version": "1.2.2",
   "description": "Obsidian plugin to display double colon (i.e. Dataview inline fields) as a single colon for more natural reading experience.",
   "main": "main.js",
   "scripts": {

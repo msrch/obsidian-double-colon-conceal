@@ -1,6 +1,7 @@
 import {
   App,
   editorLivePreviewField,
+  MarkdownView,
   Plugin,
   PluginSettingTab,
   Setting,
@@ -22,10 +23,14 @@ import { syntaxTree } from '@codemirror/language'
 
 interface DoubleColonConcealSettings {
   editMode: boolean
+  readReplacement: string
+  editReplacement: string
 }
 
 const DEFAULT_SETTINGS: DoubleColonConcealSettings = {
   editMode: false,
+  readReplacement: ':',
+  editReplacement: ':',
 }
 
 // Utils
@@ -63,8 +68,8 @@ const includesField = (text: string) => {
   return true
 }
 
-const concealDoubleColon = (node: Text) => {
-  node.textContent = (node.textContent || '').replace(/::/, ':')
+const concealDoubleColon = (node: Text, replacement: string) => {
+  node.textContent = (node.textContent || '').replace(/::/, replacement || '')
 }
 
 function hasOverlap(
@@ -78,9 +83,14 @@ function hasOverlap(
 
 // CM plugin - conceal in editing view
 
+interface ConcealWidget {
+  replacement: string
+}
+
 class ConcealWidget extends WidgetType {
-  constructor() {
+  constructor(replacement: string) {
     super()
+    this.replacement = replacement
   }
 
   eq() {
@@ -90,7 +100,7 @@ class ConcealWidget extends WidgetType {
   toDOM() {
     const span = document.createElement('span')
     span.className = 'cm-double-colon-conceal'
-    span.textContent = ':'
+    span.textContent = this.replacement || ''
     return span
   }
 
@@ -99,7 +109,7 @@ class ConcealWidget extends WidgetType {
   }
 }
 
-function addConcealDecorators(view: EditorView) {
+function addConcealDecorators(view: EditorView, replacement: string) {
   const builder = new RangeSetBuilder<Decoration>()
   const excludeLines: number[] = []
   const excludeSections: number[][] = []
@@ -151,7 +161,7 @@ function addConcealDecorators(view: EditorView) {
         signFrom,
         signTo,
         Decoration.replace({
-          widget: new ConcealWidget(),
+          widget: new ConcealWidget(replacement),
           inclusive: false,
           block: false,
         }),
@@ -162,101 +172,112 @@ function addConcealDecorators(view: EditorView) {
   return builder.finish()
 }
 
-export const editorConcealPlugin = ViewPlugin.fromClass(
-  class {
-    decorations: DecorationSet
+export const editorConcealPlugin = (replacement: string) =>
+  ViewPlugin.fromClass(
+    class {
+      decorations: DecorationSet
 
-    constructor(view: EditorView) {
-      this.decorations = addConcealDecorators(view) ?? Decoration.none
-    }
-
-    update(update: ViewUpdate) {
-      if (!update.state.field(editorLivePreviewField)) {
-        this.decorations = Decoration.none
-        return
+      constructor(view: EditorView) {
+        this.decorations =
+          addConcealDecorators(view, replacement) ?? Decoration.none
       }
 
-      if (update.docChanged || update.viewportChanged || update.selectionSet)
-        this.decorations = addConcealDecorators(update.view) ?? Decoration.none
-    }
-  },
-  {
-    decorations: (value) => value.decorations,
-  },
-)
+      update(update: ViewUpdate) {
+        if (!update.state.field(editorLivePreviewField)) {
+          this.decorations = Decoration.none
+          return
+        }
+
+        if (update.docChanged || update.viewportChanged || update.selectionSet)
+          this.decorations =
+            addConcealDecorators(update.view, replacement) ?? Decoration.none
+      }
+    },
+    {
+      decorations: (value) => value.decorations,
+    },
+  )
 
 // MD postprocessor - conceal in reading view
 
-function concealPostProcessor(el: HTMLElement) {
-  const elements = el.querySelectorAll('p, li, h1, h2, h3, h4, h5, h6')
+function createConcealPostProcessor(
+  replacement: string,
+  id: number,
+  active: { current: number },
+) {
+  return function concealPostProcessor(el: HTMLElement) {
+    if (id !== active.current) return
 
-  elements.forEach((element: HTMLLIElement | HTMLParagraphElement) => {
-    if (!element.innerText.includes('::')) return
+    const elements = el.querySelectorAll('p, li, h1, h2, h3, h4, h5, h6')
 
-    let elementPosition = 0
-    let afterStyleTag = false
+    elements.forEach((element: HTMLLIElement | HTMLParagraphElement) => {
+      if (!element.innerText.includes('::')) return
 
-    for (const node of Array.from(element.childNodes)) {
-      elementPosition++
+      let elementPosition = 0
+      let afterStyleTag = false
 
-      if (node.instanceOf(HTMLBRElement)) {
-        elementPosition = 0
-        afterStyleTag = false
-        continue
-      }
+      for (const node of Array.from(element.childNodes)) {
+        elementPosition++
 
-      if (elementPosition > 1) continue
+        if (node.instanceOf(HTMLBRElement)) {
+          elementPosition = 0
+          afterStyleTag = false
+          continue
+        }
 
-      if (
-        node.instanceOf(HTMLDivElement) &&
-        (node.className.startsWith('list-') ||
-          node.className.includes('collapse-indicator'))
-      ) {
-        elementPosition--
-        continue
-      }
+        if (elementPosition > 1) continue
 
-      if (
-        node.instanceOf(HTMLElement) &&
-        ['STRONG', 'EM', 'MARK', 'DEL'].includes(node.tagName) &&
-        node.childNodes.length === 1 &&
-        node.childNodes[0].instanceOf(Text)
-      ) {
-        const content = (node.childNodes[0].textContent || '').trim()
-        if (!content) {
+        if (
+          node.instanceOf(HTMLDivElement) &&
+          (node.className.startsWith('list-') ||
+            node.className.includes('collapse-indicator'))
+        ) {
           elementPosition--
           continue
         }
 
-        if (includesField(content)) {
-          concealDoubleColon(node.childNodes[0])
-          continue
-        }
-
-        if (isValidFieldName(content)) {
-          afterStyleTag = true
-          elementPosition--
-          continue
-        }
-      }
-
-      if (node.instanceOf(Text)) {
-        const content = (node.textContent || '').trim()
-        if (!content) {
-          elementPosition--
-          continue
-        }
-
-        if (afterStyleTag) {
-          if (content.startsWith('::')) {
-            concealDoubleColon(node)
+        if (
+          node.instanceOf(HTMLElement) &&
+          ['STRONG', 'EM', 'MARK', 'DEL'].includes(node.tagName) &&
+          node.childNodes.length === 1 &&
+          node.childNodes[0].instanceOf(Text)
+        ) {
+          const content = (node.childNodes[0].textContent || '').trim()
+          if (!content) {
+            elementPosition--
+            continue
           }
-        } else if (includesField(content)) {
-          concealDoubleColon(node)
+
+          if (includesField(content)) {
+            concealDoubleColon(node.childNodes[0], replacement)
+            continue
+          }
+
+          if (isValidFieldName(content)) {
+            afterStyleTag = true
+            elementPosition--
+            continue
+          }
+        }
+
+        if (node.instanceOf(Text)) {
+          const content = (node.textContent || '').trim()
+          if (!content) {
+            elementPosition--
+            continue
+          }
+
+          if (afterStyleTag) {
+            if (content.startsWith('::')) {
+              concealDoubleColon(node, replacement)
+            }
+          } else if (includesField(content)) {
+            concealDoubleColon(node, replacement)
+          }
         }
       }
-    }
-  })
+    })
+  }
 }
 
 // Obsidian plugin
@@ -264,25 +285,60 @@ function concealPostProcessor(el: HTMLElement) {
 export default class DoubleColonConcealPlugin extends Plugin {
   settings: DoubleColonConcealSettings
   private editorExtension: Extension[] = []
+  private markdownPostProcessorOpts = {
+    current: 0,
+  }
 
   async onload() {
     await this.loadSettings()
     this.addEditorExtension()
     this.registerEditorExtension(this.editorExtension)
-    this.registerMarkdownPostProcessor(concealPostProcessor)
+    this.addMarkdownPostProcessor()
     this.addSettingTab(new DoubleColonConcealSettingTab(this.app, this))
+    this.app.workspace.updateOptions()
+    this.rerenderActiveMarkdownViews()
+  }
+
+  onunload() {
+    this.app.workspace.updateOptions()
+    this.rerenderActiveMarkdownViews()
+  }
+
+  rerenderActiveMarkdownViews() {
+    this.app.workspace
+      .getActiveViewOfType(MarkdownView)
+      ?.previewMode.rerender(true)
   }
 
   addEditorExtension() {
     this.editorExtension.length = 0
+    this.app.workspace.updateOptions()
     if (this.settings.editMode) {
-      this.editorExtension.push(editorConcealPlugin)
+      this.editorExtension.push(
+        editorConcealPlugin(this.settings.editReplacement),
+      )
     }
+  }
+
+  addMarkdownPostProcessor() {
+    this.markdownPostProcessorOpts.current++
+    this.registerMarkdownPostProcessor(
+      createConcealPostProcessor(
+        this.settings.readReplacement,
+        this.markdownPostProcessorOpts.current,
+        this.markdownPostProcessorOpts,
+      ),
+    )
   }
 
   updateEditorExtension() {
     this.addEditorExtension()
     this.app.workspace.updateOptions()
+  }
+
+  updateMarkdownPostProcessor() {
+    this.addMarkdownPostProcessor()
+    this.rerenderActiveMarkdownViews()
   }
 
   async loadSettings() {
@@ -309,7 +365,7 @@ class DoubleColonConcealSettingTab extends PluginSettingTab {
 
     containerEl.empty()
 
-    containerEl.createEl('h2', { text: 'Double Colon Conceal - Settings' })
+    containerEl.createEl('h2', { text: 'General Settings' })
 
     new Setting(containerEl)
       .setName('Conceal double colon in Editing view')
@@ -323,6 +379,38 @@ class DoubleColonConcealSettingTab extends PluginSettingTab {
           .setValue(this.plugin.settings.editMode)
           .onChange(async (value) => {
             this.plugin.settings.editMode = value
+            await this.plugin.saveSettings()
+            this.plugin.updateEditorExtension()
+          }),
+      )
+
+    containerEl.createEl('h2', { text: 'Conceal Character' })
+
+    new Setting(containerEl)
+      .setName('Reading view')
+      .setDesc(
+        'Double colon will be repalced by this string in the reading view.',
+      )
+      .addText((text) =>
+        text
+          .setValue(this.plugin.settings.readReplacement)
+          .onChange(async (value) => {
+            this.plugin.settings.readReplacement = value || ''
+            await this.plugin.saveSettings()
+            this.plugin.updateMarkdownPostProcessor()
+          }),
+      )
+
+    new Setting(containerEl)
+      .setName('Editing view')
+      .setDesc(
+        'Double colon will be repalced by this string in the editing view.',
+      )
+      .addText((text) =>
+        text
+          .setValue(this.plugin.settings.editReplacement)
+          .onChange(async (value) => {
+            this.plugin.settings.editReplacement = value || ''
             await this.plugin.saveSettings()
             this.plugin.updateEditorExtension()
           }),

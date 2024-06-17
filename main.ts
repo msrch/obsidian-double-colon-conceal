@@ -389,7 +389,7 @@ class DoubleColonConcealSettingTab extends PluginSettingTab {
     new Setting(containerEl)
       .setName('Reading view')
       .setDesc(
-        'Double colon will be repalced by this string in the reading view.',
+        'Double colon will be replaced by this string in the reading view.',
       )
       .addText((text) =>
         text
@@ -404,7 +404,7 @@ class DoubleColonConcealSettingTab extends PluginSettingTab {
     new Setting(containerEl)
       .setName('Editing view')
       .setDesc(
-        'Double colon will be repalced by this string in the editing view.',
+        'Double colon will be replaced by this string in the editing view.',
       )
       .addText((text) =>
         text
